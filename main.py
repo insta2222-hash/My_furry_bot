@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 import telebot
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import threading
+# Добавили встроенный планировщик задач
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # ==================== НАСТРОЙКИ БОТА ====================
 BOT_TOKEN = "8825377598:AAHHkGPmb2j4QLFZ0Om054A-dKFN0aLvUtM"
@@ -11,6 +13,9 @@ CHANNEL_ID = "@test_furry"
 # ========================================================
 
 bot = telebot.TeleBot(BOT_TOKEN)
+scheduler = BackgroundScheduler()
+scheduler.start()
+
 TIME_SLOTS = [12, 14, 16, 18, 20]
 DB_FILE = "last_post_time.txt"
 HASHTAGS = "\n\n#furry #furryart #cute #anthro"
@@ -59,6 +64,13 @@ def extract_author(text):
     if fa_match: return f"Art by: {fa_match.group(1)}"
     return None
 
+# Функция, которую планировщик вызовет точно в нужное время
+def send_scheduled_post(photo_id, text):
+    try:
+        bot.send_photo(chat_id=CHANNEL_ID, photo=photo_id, caption=text)
+    except Exception as e:
+        print(f"Ошибка отправки отложенного поста: {e}")
+
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
     caption_text = message.caption if message.caption else ""
@@ -70,24 +82,20 @@ def handle_photo(message):
         last_time = datetime.now()
         
     next_slot = calculate_next_slot(last_time)
-    post_timestamp = int(next_slot.timestamp())
     
     try:
-        # Прямой запрос к API Телеграма, без посредников и багов библиотеки
-        bot.api_request(
-            'sendPhoto',
-            method_post='post',
-            params={
-                'chat_id': CHANNEL_ID,
-                'photo': message.photo[-1].file_id,
-                'caption': final_text,
-                'until_date': post_timestamp
-            }
+        # Регистрируем задачу в планировщике на нужное время
+        scheduler.add_job(
+            send_scheduled_post,
+            'date',
+            run_date=next_slot,
+            args=[message.photo[-1].file_id, final_text]
         )
+        
         save_last_post_time(next_slot)
-        bot.reply_to(message, f"✅ Пост отложен на:\n📅 {next_slot.strftime('%d.%m.%Y в %H:%M')}")
+        bot.reply_to(message, f"✅ Пост успешно поставлен в очередь на:\n📅 {next_slot.strftime('%d.%m.%Y в %H:%M')}")
     except Exception as e:
-        bot.reply_to(message, f"❌ Ошибка: {str(e)}")
+        bot.reply_to(message, f"❌ Ошибка планировщика: {str(e)}")
 
 if __name__ == "__main__":
     threading.Thread(target=run_web_server, daemon=True).start()
