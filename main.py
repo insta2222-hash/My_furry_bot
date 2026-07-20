@@ -6,8 +6,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import threading
 
 # ==================== НАСТРОЙКИ БОТА ====================
-BOT_TOKEN = "СЮДА_ВСТАВЬ_ТОКЕН_БОТА"
-CHANNEL_ID = "@СЮДА_ИМЯ_ТВОЕГО_КАНАЛА"
+BOT_TOKEN = "8825377598:AAGh1okP02lBDfi2imGamHk8sUHO0Dl0Yqc"
+CHANNEL_ID = "https://t.me/+yLMTwsO8001kMjcy"
 # ========================================================
 
 bot = telebot.TeleBot(BOT_TOKEN)
