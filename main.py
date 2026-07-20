@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import threading
 
 # ==================== НАСТРОЙКИ БОТА ====================
-BOT_TOKEN = "8825377598:AAGh1okP02lBDfi2imGamHk8sUHO0Dl0Yqc"
+BOT_TOKEN = "8825377598:AAHHkGPmb2j4QLFZ0Om054A-dKFN0aLvUtM"
 CHANNEL_ID = "@test_furry"
 # ========================================================
 
