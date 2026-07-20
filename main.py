@@ -7,7 +7,7 @@ import threading
 
 # ==================== НАСТРОЙКИ БОТА ====================
 BOT_TOKEN = "8825377598:AAGh1okP02lBDfi2imGamHk8sUHO0Dl0Yqc"
-CHANNEL_ID = "@test_furi"
+CHANNEL_ID = "@test_furry"
 # ========================================================
 
 bot = telebot.TeleBot(BOT_TOKEN)
