@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 import telebot
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import threading
-# Добавили встроенный планировщик задач
 from apscheduler.schedulers.background import BackgroundScheduler
 
 # ==================== НАСТРОЙКИ БОТА ====================
@@ -13,7 +12,8 @@ CHANNEL_ID = "@test_furry"
 # ========================================================
 
 bot = telebot.TeleBot(BOT_TOKEN)
-scheduler = BackgroundScheduler()
+# Добавили часовой пояс, чтобы время сервера и твоё совпадали
+scheduler = BackgroundScheduler(timezone="Europe/Kiev")
 scheduler.start()
 
 TIME_SLOTS = [12, 14, 16, 18, 20]
@@ -64,12 +64,12 @@ def extract_author(text):
     if fa_match: return f"Art by: {fa_match.group(1)}"
     return None
 
-# Функция, которую планировщик вызовет точно в нужное время
-def send_scheduled_post(photo_id, text):
+# Функция теперь знает, кому написать в случае падения
+def send_scheduled_post(photo_id, text, user_chat_id):
     try:
         bot.send_photo(chat_id=CHANNEL_ID, photo=photo_id, caption=text)
     except Exception as e:
-        print(f"Ошибка отправки отложенного поста: {e}")
+        bot.send_message(chat_id=user_chat_id, text=f"❌ Ошибка отправки в канал: {str(e)}")
 
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
@@ -84,12 +84,12 @@ def handle_photo(message):
     next_slot = calculate_next_slot(last_time)
     
     try:
-        # Регистрируем задачу в планировщике на нужное время
+        # Передаем ID твоего чата третьим аргументом
         scheduler.add_job(
             send_scheduled_post,
             'date',
             run_date=next_slot,
-            args=[message.photo[-1].file_id, final_text]
+            args=[message.photo[-1].file_id, final_text, message.chat.id]
         )
         
         save_last_post_time(next_slot)
