@@ -73,8 +73,17 @@ def handle_photo(message):
     post_timestamp = int(next_slot.timestamp())
     
     try:
-        # Исправлено: заменено until_date на schedule_date для правильной отложки
-        bot.send_photo(chat_id=CHANNEL_ID, photo=message.photo[-1].file_id, caption=final_text, schedule_date=post_timestamp)
+        # Прямой запрос к API Телеграма, без посредников и багов библиотеки
+        bot.api_request(
+            'sendPhoto',
+            method_post='post',
+            params={
+                'chat_id': CHANNEL_ID,
+                'photo': message.photo[-1].file_id,
+                'caption': final_text,
+                'until_date': post_timestamp
+            }
+        )
         save_last_post_time(next_slot)
         bot.reply_to(message, f"✅ Пост отложен на:\n📅 {next_slot.strftime('%d.%m.%Y в %H:%M')}")
     except Exception as e:
